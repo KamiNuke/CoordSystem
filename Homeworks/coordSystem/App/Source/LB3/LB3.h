@@ -4,8 +4,6 @@
 #include "Core/Layer.h"
 #include "WebSocketClient.h"
 
-#include <map>
-
 #include "imgui.h"
 
 namespace App
@@ -14,17 +12,17 @@ namespace App
     {
     public:
         /**
-        * @param id: Унікальний ідентифікатор супутника (UUID).
-        * @param xy: Координати супутника у декартових координатах (кілометри).
-        * @param sentAt: Час відправки повідомлення супутником (мілісекунди з початку епохи Unix).
-        * @param receivedAt: Час отримання повідомлення об'єктом (мілісекунди з початку епохи Unix).
-        */
+         * @param id: Унікальний ідентифікатор супутника (UUID).
+         * @param xy: Координати супутника у декартових координатах (кілометри).
+         * @param sentAt: Час відправки повідомлення супутником (мілісекунди з початку епохи Unix).
+         * @param receivedAt: Час отримання повідомлення об'єктом (мілісекунди з початку епохи Unix).
+         */
         struct SatelliteData
         {
             float x;
             float y;
-            uint64_t sentAt;
-            uint64_t receivedAt;
+            long double sentAt;
+            long double receivedAt;
 
             [[nodiscard]] float GetDistance() const;
         };
@@ -49,23 +47,21 @@ namespace App
         void HandleMessage(const std::string& msg);
 
         /**
-        * @param Використовується трилитерація
-        */
+         * @param Використовується трилитерація
+         */
         std::optional<ObjectPosition> CalculateAnalytical();
 
         /**
-        * @param Використовується трилитерація
-        */
+         * @param Використовується трилитерація
+         */
         std::optional<ObjectPosition> CalculateNumerical();
     private:
         int emulationZoneSize { 200 };
         int messageFrequency { 1 };
         int satelliteSpeed { 120 };
         int objectSpeed { 20 };
-        std::map<std::string, SatelliteData> m_satellitesData;
-        std::map<std::string, SatelliteData> m_satellitesDataCopy;
-        //std::list<std::pair<std::string, SatelliteData>> m_satellitesData;
-        //std::list<std::pair<std::string, SatelliteData>> m_satellitesDataCopy;
+        std::vector<std::pair<std::string, SatelliteData>> m_satellitesData;
+        std::vector<std::pair<std::string, SatelliteData>> m_satellitesDataCopy;
 
         std::optional<ObjectPosition> m_analyticalPosition;
         std::optional<ObjectPosition> m_numericalPosition;

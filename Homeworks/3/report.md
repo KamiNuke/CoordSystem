@@ -311,8 +311,8 @@ namespace App
         {
             float x;
             float y;
-            uint64_t sentAt;
-            uint64_t receivedAt;
+            long double sentAt;
+            long double receivedAt;
 
             [[nodiscard]] float GetDistance() const;
         };
@@ -369,9 +369,20 @@ namespace App
 #include "imgui.h"
 
 #include <nlohmann/json.hpp>
+#include <SDL3/SDL_time.h>
 
 #include "implot.h"
 using json = nlohmann::json;            // from <nlohmann/json.hpp>
+
+#include <chrono>
+
+uint64_t getUnixTimeMs() {
+    return static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ).count()
+    );
+}
 
 namespace App
 {
@@ -391,6 +402,7 @@ namespace App
                 throw std::runtime_error("Invalid JSON");
             }
 
+
             const std::string id = j["id"];
             SatelliteData data
             {
@@ -399,6 +411,7 @@ namespace App
                 j["sentAt"],
                 j["receivedAt"]
             };
+
 
             std::lock_guard<std::mutex> lock(m_mtx);
 
@@ -441,22 +454,22 @@ namespace App
 
         float A = 2 * (x2 - x1);
         float B = 2 * (y2 - y1);
-        float C = r1*r1 - r2*r2 - x1*x1 + x2*x2 - y1*y1 + y2*y2;
+        float C = r1*r1 - r2*r2 - x1*x1 - y1*y1 + x2*x2 + y2*y2;
 
         float D = 2 * (x3 - x2);
         float E = 2 * (y3 - y2);
-        float F = r2*r2 - r3*r3 - x2*x2 + x3*x3 - y2*y2 + y3*y3;
+        float F = r2*r2 - r3*r3 - x2*x2 - y2*y2 + x3*x3 + y3*y3;
         //float F = r1*r1 - r3*r3 - x1*x1 + x3*x3 - y1*y1 + y3*y3;
 
         float denominator1 = (E * A - B * D);
         float denominator2 = (B * D - A * E);
 
-        if (std::abs(denominator1) == 0 || std::abs(denominator2) == 0)
+        if (denominator1 == 0 || denominator2 == 0)
             return std::nullopt;
 
         ObjectPosition pos{};
         pos.x = (C * E - F * B) / denominator1;
-        pos.y = (A * F - D * C) / denominator2;
+        pos.y = (C * D - A * F) / denominator2;
 
         if (std::isnan(pos.x) || std::isnan(pos.y))
             return std::nullopt;
@@ -530,8 +543,8 @@ namespace App
 
     float LB3::SatelliteData::GetDistance() const
     {
-        constexpr float LIGHTSPEED { 300000.0f };
-        const float timeDelay { static_cast<float>(receivedAt - sentAt) / 1000.0f };
+        constexpr float LIGHTSPEED { 299792.458f };
+        const float timeDelay { static_cast<float>(receivedAt - sentAt) / 1000.f };
         return LIGHTSPEED * timeDelay;
     }
 
@@ -665,7 +678,7 @@ namespace App
 
 ```
 
-Вікно працючого додатка
+Вікно працючого додатка 
 ![3](./screenshots/3.png)
 
 
