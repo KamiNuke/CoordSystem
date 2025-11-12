@@ -12,11 +12,11 @@ namespace App
     {
     public:
         /**
-         * @param id: Унікальний ідентифікатор супутника (UUID).
-         * @param xy: Координати супутника у декартових координатах (кілометри).
-         * @param sentAt: Час відправки повідомлення супутником (мілісекунди з початку епохи Unix).
-         * @param receivedAt: Час отримання повідомлення об'єктом (мілісекунди з початку епохи Unix).
-         */
+        * @param id: Унікальний ідентифікатор супутника (UUID).
+        * @param xy: Координати супутника у декартових координатах (кілометри).
+        * @param sentAt: Час відправки повідомлення супутником (мілісекунди з початку епохи Unix).
+        * @param receivedAt: Час отримання повідомлення об'єктом (мілісекунди з початку епохи Unix).
+        */
         struct SatelliteData
         {
             float x;
@@ -47,13 +47,13 @@ namespace App
         void HandleMessage(const std::string& msg);
 
         /**
-         * @param Використовується трилитерація
-         */
+        * @param Використовується трилитерація
+        */
         std::optional<ObjectPosition> CalculateAnalytical();
 
         /**
-         * @param Використовується трилитерація
-         */
+        * @param Використовується трилитерація
+        */
         std::optional<ObjectPosition> CalculateNumerical();
     private:
         int emulationZoneSize { 200 };

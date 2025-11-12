@@ -83,33 +83,31 @@ namespace App
         ++it;
         SatelliteData s3 = it->second;
 
-        float x1 = s1.x, y1 = s1.y, r1 = s1.GetDistance();
-        float x2 = s2.x, y2 = s2.y, r2 = s2.GetDistance();
-        float x3 = s3.x, y3 = s3.y, r3 = s3.GetDistance();
+        double x1 = s1.x, y1 = s1.y, r1 = s1.GetDistance();
+        double x2 = s2.x, y2 = s2.y, r2 = s2.GetDistance();
+        double x3 = s3.x, y3 = s3.y, r3 = s3.GetDistance();
 
-        float A = 2 * (x2 - x1);
-        float B = 2 * (y2 - y1);
-        float C = r1*r1 - r2*r2 - x1*x1 - y1*y1 + x2*x2 + y2*y2;
+        double A = 2 * (x2 - x1);
+        double B = 2 * (y2 - y1);
+        double C = r1*r1 - r2*r2 - x1*x1 - y1*y1 + x2*x2 + y2*y2;
 
-        float D = 2 * (x3 - x2);
-        float E = 2 * (y3 - y2);
-        float F = r2*r2 - r3*r3 - x2*x2 - y2*y2 + x3*x3 + y3*y3;
-        //float F = r1*r1 - r3*r3 - x1*x1 + x3*x3 - y1*y1 + y3*y3;
+        double D = 2 * (x3 - x2);
+        double E = 2 * (y3 - y2);
+        double F = r2*r2 - r3*r3 - x2*x2 - y2*y2 + x3*x3 + y3*y3;
 
-        float denominator1 = (E * A - B * D);
-        float denominator2 = (B * D - A * E);
+        double denominator1 = (E * A - B * D);
+        double denominator2 = (B * D - A * E);
 
         if (denominator1 == 0 || denominator2 == 0)
             return std::nullopt;
 
-        ObjectPosition pos{};
-        pos.x = (C * E - F * B) / denominator1;
-        pos.y = (C * D - A * F) / denominator2;
+        double x = (C * E - F * B) / denominator1;
+        double y = (C * D - A * F) / denominator2;
 
-        if (std::isnan(pos.x) || std::isnan(pos.y))
+        if (std::isnan(x) || std::isnan(y))
             return std::nullopt;
 
-        return pos;
+        return ObjectPosition(static_cast<float>(x), static_cast<float>(y));
     }
 
     std::optional<LB3::ObjectPosition> LB3::CalculateNumerical()
@@ -125,7 +123,7 @@ namespace App
                 const float dx = x - sat.x;
                 const float dy = y - sat.y;
                 const float calc_r = std::sqrt(dx*dx + dy*dy);
-                if (calc_r < 1e-6f) continue;
+                if (calc_r == 0) continue;
 
                 const float diff = calc_r - sat.GetDistance();
                 gx += 2.0f * diff * dx / calc_r;
@@ -179,7 +177,7 @@ namespace App
     float LB3::SatelliteData::GetDistance() const
     {
         constexpr float LIGHTSPEED { 299792.458f };
-        const float timeDelay { static_cast<float>(receivedAt - sentAt) / 1000.f };
+        const double timeDelay { static_cast<double>(receivedAt - sentAt) / 1000.f };
         return LIGHTSPEED * timeDelay;
     }
 
@@ -293,7 +291,7 @@ namespace App
             if (distanceToCenter < hover_radius)
             {
                 ImPlot::Annotation(x, y, color, ImVec2(10,10), false,
-                                   "X: %.2f\nY: %.2f km", x, y);
+                "X: %.2f\nY: %.2f km", x, y);
             }
         }
     }

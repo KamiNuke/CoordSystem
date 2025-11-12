@@ -237,57 +237,6 @@ void WebSocketClient::Run()
 
 Код програми
 ```
-void LB3::HandleMessage(const std::string& msg)
-    {
-        try
-        {
-            json j = json::parse(msg);
-
-            if (j.is_null())
-                return;
-
-            if (!j.contains("id") && !j.contains("x")
-                && !j.contains("y") && !j.contains("sentAt")
-                && !j.contains("receivedAt"))
-            {
-                throw std::runtime_error("Invalid JSON");
-            }
-
-            const std::string id = j["id"];
-            SatelliteData data
-            {
-                j["x"],
-                j["y"],
-                j["sentAt"],
-                j["receivedAt"]
-            };
-
-            std::lock_guard<std::mutex> lock(m_mtx);
-
-            const auto it = std::ranges::find_if(m_satellitesData,
-                                                 [&id](const auto& p){ return p.first == id; });
-
-            if (it != m_satellitesData.end())
-            {
-                it->second = data;
-            }
-            else
-            {
-                m_satellitesData.emplace_back(id, data);
-
-                if (m_satellitesData.size() > 3)
-                    m_satellitesData.erase(m_satellitesData.begin());
-            }
-        }
-        catch (std::exception& e)
-        {
-            std::cerr << "JSON parse error: " << e.what() << '\n';
-        }
-    }
-```
-
-
-```
 #ifndef COORDSYSTEM_LB3_H
 #define COORDSYSTEM_LB3_H
 
@@ -448,33 +397,31 @@ namespace App
         ++it;
         SatelliteData s3 = it->second;
 
-        float x1 = s1.x, y1 = s1.y, r1 = s1.GetDistance();
-        float x2 = s2.x, y2 = s2.y, r2 = s2.GetDistance();
-        float x3 = s3.x, y3 = s3.y, r3 = s3.GetDistance();
+        double x1 = s1.x, y1 = s1.y, r1 = s1.GetDistance();
+        double x2 = s2.x, y2 = s2.y, r2 = s2.GetDistance();
+        double x3 = s3.x, y3 = s3.y, r3 = s3.GetDistance();
 
-        float A = 2 * (x2 - x1);
-        float B = 2 * (y2 - y1);
-        float C = r1*r1 - r2*r2 - x1*x1 - y1*y1 + x2*x2 + y2*y2;
+        double A = 2 * (x2 - x1);
+        double B = 2 * (y2 - y1);
+        double C = r1*r1 - r2*r2 - x1*x1 - y1*y1 + x2*x2 + y2*y2;
 
-        float D = 2 * (x3 - x2);
-        float E = 2 * (y3 - y2);
-        float F = r2*r2 - r3*r3 - x2*x2 - y2*y2 + x3*x3 + y3*y3;
-        //float F = r1*r1 - r3*r3 - x1*x1 + x3*x3 - y1*y1 + y3*y3;
+        double D = 2 * (x3 - x2);
+        double E = 2 * (y3 - y2);
+        double F = r2*r2 - r3*r3 - x2*x2 - y2*y2 + x3*x3 + y3*y3;
 
-        float denominator1 = (E * A - B * D);
-        float denominator2 = (B * D - A * E);
+        double denominator1 = (E * A - B * D);
+        double denominator2 = (B * D - A * E);
 
         if (denominator1 == 0 || denominator2 == 0)
             return std::nullopt;
 
-        ObjectPosition pos{};
-        pos.x = (C * E - F * B) / denominator1;
-        pos.y = (C * D - A * F) / denominator2;
+        double x = (C * E - F * B) / denominator1;
+        double y = (C * D - A * F) / denominator2;
 
-        if (std::isnan(pos.x) || std::isnan(pos.y))
+        if (std::isnan(x) || std::isnan(y))
             return std::nullopt;
 
-        return pos;
+        return ObjectPosition(static_cast<float>(x), static_cast<float>(y));
     }
 
     std::optional<LB3::ObjectPosition> LB3::CalculateNumerical()
@@ -490,7 +437,7 @@ namespace App
                 const float dx = x - sat.x;
                 const float dy = y - sat.y;
                 const float calc_r = std::sqrt(dx*dx + dy*dy);
-                if (calc_r < 1e-6f) continue;
+                if (calc_r == 0) continue;
 
                 const float diff = calc_r - sat.GetDistance();
                 gx += 2.0f * diff * dx / calc_r;
@@ -544,7 +491,7 @@ namespace App
     float LB3::SatelliteData::GetDistance() const
     {
         constexpr float LIGHTSPEED { 299792.458f };
-        const float timeDelay { static_cast<float>(receivedAt - sentAt) / 1000.f };
+        const double timeDelay { static_cast<double>(receivedAt - sentAt) / 1000.f };
         return LIGHTSPEED * timeDelay;
     }
 
@@ -675,6 +622,7 @@ namespace App
         ImGui::End();
     }
 }
+
 
 ```
 
